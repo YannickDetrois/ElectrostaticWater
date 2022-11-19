@@ -11,7 +11,7 @@ class Charge:
         self.charge = charge
 
     def plot(self):
-        plt.plot(self.__x, self.__y, 'r+')
+        plt.plot(self.__x, self.__y, 'r+', label='charge = {}'.format(self.charge))
 
     def get_position(self):
         return [self.__x, self.__y]

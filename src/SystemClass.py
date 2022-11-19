@@ -6,8 +6,12 @@ class System:
         self.__water, self.__charge, self.__g, self.__k = water, charge, gravity_constant, coulomb_constant
 
     def plot(self):
+        plt.title("Trajectoire de la goutte d'eau")
+        plt.xlabel("x")
+        plt.ylabel("y")
         self.__water.plot()
         self.__charge.plot()
+        plt.legend()
         plt.show()
 
     def update(self, dt):
