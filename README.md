@@ -16,5 +16,5 @@ To see and test the experiment simulation, simply run file main.py on any IDE or
 
 main.py contains a generic use of the classes, in which parameters can be manually changed to test different setups. For instance, a water drop with initial position (2,100), initial velocity (0.,0.), charge -10 and mass 1, a charge with position (0,0) and charge -50 and a system with gravitational constant 0.5 and Coulomb constant 1 gives:
 
-![trajectory](/images/spee1.png)
 ![velocity](/images/traj1.png)
+![trajectory](/images/spee1.png)
