@@ -93,6 +93,8 @@ class System:
       water_volume = np.pi * pow(self._drop_diameter/2, 2)  #in 2D, so assuming water drops are circular and not spherical
       self._water_charge = water_volume * charge_density              #charge of a water droplet
       self._water_mass = water_volume * mass_density                  #mass of a water droplet
+      print("Mass of a water drop: {}kg".format(self._water_mass))
+      print("Charge of a water drop: {}C".format(self._water_charge))
 
       self._water = []
       self.new_water()
@@ -154,7 +156,7 @@ class System:
 
       for t in self._time:
 
-         for water in self._water:
+         for n, water in enumerate(self._water):
 
             # Electric force
             r = water.get_position()-self._charge.get_position()
@@ -163,12 +165,12 @@ class System:
 
             a_elec = self._coulomb_constant * self._water_charge * self._charge.charge / (r2 * self._water_mass) * r
 
-            water.update(self._time_step, a_grav)
+            water.update(self._time_step, a_grav + a_elec)
          
          #sum of squares of water coordinates of last spawned batch compared to initial coordinates
          ss = 0
-         for n, water in enumerate(self._water[-self._number_drops:]):
-            ss += np.sum(np.square(water.get_position()-self._water_spawn_position[n]))
+         for nn, water in enumerate(self._water[-self._number_drops:]):
+            ss += np.sum(np.square(water.get_position()-self._water_spawn_position[nn]))
 
          if ss/self._number_drops >= np.square(self._drop_diameter): 
             self.new_water()      #if new water should spawn (previous water gone), a line of water is added

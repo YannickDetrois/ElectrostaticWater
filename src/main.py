@@ -14,10 +14,10 @@ generation_time = 0                    #time in which new water spawns          
 
 ######### WATER PARAMETERS #########
 
-water_velocity = np.array([2,1])       #initial velocity of all water drops         [m/s]
+water_velocity = np.array([2,0])       #initial velocity of all water drops         [m/s]
 water_position = np.array([0,20])      #mean initial position of all water drops    [m]
 stream_radius = 1                    #radius of the water stream                  [m]
-charge_density = 1                     #charge density of the water                 [C/m^3]
+charge_density = pow(10,-7)        #charge density of the water                 [C/m^3]
 mass_density = 1                       #mass density of water                       [kg/m^3]
 
 ######## CHARGE PARAMETERS #########
