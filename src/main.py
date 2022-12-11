@@ -1,10 +1,39 @@
-from WaterClass import *
-from ChargeClass import *
 from SystemClass import *
 
-w = Water([2,100], [0.,0.], -10, 1)
-q = Charge([0,0], -50)
-s = System(w, q, 0.5, 1)
-for a in range(5555): s.update(0.01)
-s.plot()
-w.plotspeed()
+####################################
+#### DEFINING SYSTEM PARAMETERS ####
+####################################
+
+gravity_constant = 9.81                #gravity constant on Earth's surface         [m/s^2]
+coulomb_constant = 8.988*pow(10,9)     #Coulomb constant                            [N⋅m^2⋅C^−2]
+miniumum_potential = 1                 #Lennard-Jones well depth U(r_min)           [J]
+minimum_radius = 1                  #Lennard-Jones minimum potential r_min       [m]
+simulation_time = 3                    #simulation time                             [s]
+time_step = 0.1                        #time step                                   [s]
+generation_time = 0                    #time in which new water spawns              [s]
+
+######### WATER PARAMETERS #########
+
+water_velocity = np.array([2,1])       #initial velocity of all water drops         [m/s]
+water_position = np.array([0,20])      #mean initial position of all water drops    [m]
+stream_radius = 1                    #radius of the water stream                  [m]
+charge_density = 1                     #charge density of the water                 [C/m^3]
+mass_density = 1                       #mass density of water                       [kg/m^3]
+
+######## CHARGE PARAMETERS #########
+
+charge_position = [0,0]                #position of the charge                      [m]
+charge = -1                            #value of the charge                         [C]
+
+
+s = System(gravity_constant, coulomb_constant, miniumum_potential, minimum_radius, simulation_time, time_step, generation_time,
+             water_velocity, water_position, stream_radius, charge_density, mass_density, charge_position, charge)
+s.update()
+
+'''
+Notes: 
+- System should be given parameters to initialise water and charge itself. 
+- System should also manage time. 
+- Interface to give initial values should be more user-friendly.
+- Plotting should be done differently.
+'''
