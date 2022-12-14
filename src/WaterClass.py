@@ -2,7 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 class Water:
-    def __init__(self, position, velocity, markersize, charge, mass):
+    def __init__(self, position, velocity, charge, mass):
         '''
         This initialiser allows to create a water droplet. A water droplet is considered to be spherical.
 
@@ -19,16 +19,8 @@ class Water:
         '''
         self.__x = [position[0]]
         self.__y = [position[1]]
-        self._markersize = markersize
         self.__velocity, self.charge, self.mass = np.array(velocity, dtype=float), charge, mass
         self.__speed = [self.get_speed()]
-
-    def plot(self):
-        '''
-        Allows to plot the trajectory of the drop by plotting the log of all computed positions for a given time.
-        '''
-        plt.plot(self.__x[-1], self.__y[-1], 'bo', markersize = self._markersize)
-        #, label="goutte d'eau: charge = {}, masse = {}".format(self.charge, self.mass)
 
     def plotspeed(self):
         '''

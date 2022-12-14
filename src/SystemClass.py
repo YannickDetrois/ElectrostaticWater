@@ -1,6 +1,8 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.pyplot import figure
+import matplotlib.animation as animation
+import os
 from WaterClass import *
 from ChargeClass import *
 
@@ -63,7 +65,7 @@ class System:
       self._init_water(minimum_radius, stream_radius, charge_density, mass_density)
 
       ### INITIALISING CHARGE ###
-      self._charge = Charge(charge_position, charge, self._dots_per_x * self._deltaxlim / 40)
+      self._charge = Charge(charge_position, charge)
 
    def _init_water(self, minimum_radius, stream_radius, charge_density, mass_density):
       
@@ -103,41 +105,54 @@ class System:
       '''
       Allows to initialise the plot, setting title, dimensions, ...
       '''
-      self._xlimleft = -15
-      self._xlimright = 15
-      self._ylimlow = -5
-      self._ylimhigh = 24
-      self._deltaxlim = self._xlimright - self._xlimleft
+      xlimleft = -15
+      xlimright = 15
+      ylimlow = -5
+      ylimhigh = 24
+      self._deltaxlim = xlimright - xlimleft
 
-      self._width = 8
-      self._height = 6
+      width = 8
+      height = 6
       self._dots_per_inch = 100
-      dots_in_width = self._width * self._dots_per_inch
+      dots_in_width = width * self._dots_per_inch
       self._dots_per_x = dots_in_width / self._deltaxlim * 1.1
 
-      figure(figsize=(self._width, self._height), dpi=self._dots_per_inch)
+      self._figure = figure(figsize=(width, height), dpi=self._dots_per_inch)
+      axis = plt.axes(xlim=(xlimleft,xlimright),  ylim=(ylimlow,ylimhigh))
+      
+      # initializing a line variable
+      self._line_water, self._line_charge, = axis.plot([], [], [], [], lw=0)
 
    def new_water(self):
       
          for p in self._water_spawn_position:
-            self._water.append(Water(p, self._water_velocity, (self._drop_diameter * self._dots_per_x / 2), self._water_charge, self._water_mass))
+            self._water.append(Water(p, self._water_velocity, self._water_charge, self._water_mass))
 
    def update_plot(self):
       '''
       Allows to plot the trajectory of the drop and the charge in one figure.
       '''
       
-      plt.cla()
-      plt.title("Trajectoire de la goutte d'eau")
-      plt.xlabel("x")
-      plt.ylabel("y")
-      plt.ylim((self._ylimlow,self._ylimhigh))
-      plt.xlim((self._xlimleft,self._xlimright))
-      self._charge.plot()
-      for water in self._water: water.plot()
-      plt.pause(self._time_step)
+      water_positions = np.array([water.get_position() for water in self._water])
+      charge_position = self._charge.get_position()
 
-   def update(self):
+      #Plotting water drops
+      self._line_water.set_data(water_positions[:,0], water_positions[:,1])
+      self._line_water.set_color('b')
+      self._line_water.set_marker('o')
+      self._line_water.set_markersize(self._drop_diameter * self._dots_per_x / 2)
+      #, label="goutte d'eau: charge = {}, masse = {}".format(self.charge, self.mass)
+
+      # Plotting charge
+      self._line_charge.set_data(charge_position[0], charge_position[1])
+      self._line_charge.set_color('r')
+      self._line_charge.set_marker('+')
+      self._line_charge.set_markersize(self._dots_per_x * self._deltaxlim / 40)
+      #, label='charge = {}'.format(self.charge)
+
+      return self._line_water, self._line_charge,
+
+   def update(self, frame):
       '''
       Computes and operates the velocity vector change of the water drop in the environment given electrical and gravitational parameters.
       Additionally, computes velocity change due to a Lennard-Jones potential between adjacent water drops.
@@ -154,30 +169,26 @@ class System:
 
       a_grav = - np.array([0,self._gravity_constant])
 
-      for t in self._time:
+      for n, water in enumerate(self._water):
 
-         for n, water in enumerate(self._water):
+         # Electric force
+         r = water.get_position()-self._charge.get_position()
+         r2 = np.sum(np.square(r))
+         r = r/np.sqrt(r2)
 
-            # Electric force
-            r = water.get_position()-self._charge.get_position()
-            r2 = np.sum(np.square(r))
-            r = r/np.sqrt(r2)
+         a_elec = self._coulomb_constant * self._water_charge * self._charge.charge / (r2 * self._water_mass) * r
 
-            a_elec = self._coulomb_constant * self._water_charge * self._charge.charge / (r2 * self._water_mass) * r
+         water.update(self._time_step, a_grav + a_elec)
+      
+      #sum of squares of water coordinates of last spawned batch compared to initial coordinates
+      ss = 0
+      for nn, water in enumerate(self._water[-self._number_drops:]):
+         ss += np.sum(np.square(water.get_position()-self._water_spawn_position[nn]))
 
-            water.update(self._time_step, a_grav + a_elec)
-         
-         #sum of squares of water coordinates of last spawned batch compared to initial coordinates
-         ss = 0
-         for nn, water in enumerate(self._water[-self._number_drops:]):
-            ss += np.sum(np.square(water.get_position()-self._water_spawn_position[nn]))
-
-         if ss/self._number_drops >= np.square(self._drop_diameter): 
-            self.new_water()      #if new water should spawn (previous water gone), a line of water is added
-         
-         self.update_plot()
-
-      plt.show()
+      if ss/self._number_drops >= np.square(self._drop_diameter): 
+         self.new_water()      #if new water should spawn (previous water gone), a line of water is added
+      
+      return self.update_plot()
 
       '''# Lennard-Jones potential is defined as U(r)=4e((s/r)^12-(s/r)^6)
       # Resulting force is radial of norm F = -dU/dr = 4e((12s/r)^13-(6s/r)^7)
@@ -190,3 +201,18 @@ class System:
          # Using that a = dv/dt to find an expression for the change in velocity
          a = a_elec + a_grav + a_lejo 
          self.__water.update(dt, dv)'''
+
+   def animate(self, save = 0, name = ''):
+
+      ani = animation.FuncAnimation(self._figure, self.update, frames=len(self._time), interval=100, repeat=False, blit = True)
+      plt.show()
+
+      if save:
+
+         path = os.path.join(os.path.dirname(__file__), os.pardir)  #parent directory of src
+         path = os.path.join(path, 'animations')                    #going into new directory animations
+         os.makedirs(path, exist_ok=True)                           #creating new directory animations if needed
+         filename = name + '.gif'
+
+         writergif = animation.PillowWriter(fps=15)
+         ani.save(os.path.join(path, filename), writer=writergif)
