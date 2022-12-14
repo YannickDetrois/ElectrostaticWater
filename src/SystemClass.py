@@ -7,7 +7,7 @@ from WaterClass import *
 from ChargeClass import *
 
 class System:
-   def __init__(self, gravity_constant, coulomb_constant, miniumum_potential, minimum_radius, simulation_time, time_step, generation_time,
+   def __init__(self, gravity_constant, coulomb_constant, minimum_potential, minimum_radius, simulation_time, time_step, generation_time,
             water_velocity, water_position, stream_radius, charge_density, mass_density, charge_position, charge):
       '''
       This initialiser allows to create a system, which is composed of environmental parameters defining the water drop experiment.
@@ -37,9 +37,9 @@ class System:
       stream_radius: float              
          radius of the water stream                  [m]
       charge_density: float                 
-         charge density of the water                 [C/m^3]
+         charge density of the water                 [C/m^2]
       mass_density: float                 
-         mass density of the water                   [kg/m^3]
+         mass density of the water                   [kg/m^2]
 
 
       charge_position: 2D np.array             
@@ -50,7 +50,7 @@ class System:
 
       self._gravity_constant = gravity_constant
       self._coulomb_constant = coulomb_constant 
-      self._miniumum_potential = miniumum_potential
+      self._epsilon_LJ = minimum_potential
       self._simulation_time = simulation_time 
       self._time_step = time_step 
       self._generation_time = generation_time
@@ -72,7 +72,7 @@ class System:
       #Determine how many water drops fit in the stream
       
       self._drop_diameter = 2 * minimum_radius                           #diameter of a water droplet
-      self._sigma_radius = self._drop_diameter / pow(2, 7/6)             #diameter of one water droplet = d_min = 2*2^(1/6)*s = 2^(7/6)*s (real valued positive solution)
+      self._sigma_LJ = self._drop_diameter / pow(2, 7/6)             #diameter of one water droplet = d_min = 2*2^(1/6)*s = 2^(7/6)*s (real valued positive solution)
       self._number_drops = int((2*stream_radius) // self._drop_diameter) #integer number of water drops that fit in the stream diameter (x direction)
       self._stream_radius = self._number_drops * self._drop_diameter / 2 #radius of the largest possible water stream with given dmin
 
@@ -92,7 +92,7 @@ class System:
       for n in range(self._number_drops):
          self._water_spawn_position[n] = self._water_position + (self._stream_radius - self._drop_diameter / 2 - n * self._drop_diameter) * self._v_orth
 
-      water_volume = np.pi * pow(self._drop_diameter/2, 2)  #in 2D, so assuming water drops are circular and not spherical
+      water_volume = np.pi * pow(self._drop_diameter/2, 2)            #in 2D, so assuming water drops are circular and not spherical
       self._water_charge = water_volume * charge_density              #charge of a water droplet
       self._water_mass = water_volume * mass_density                  #mass of a water droplet
       print("Mass of a water drop: {}kg".format(self._water_mass))
@@ -162,12 +162,11 @@ class System:
       dt: float
          Time interval used for updating
       '''
-
       # Components of acceleration are determined by Newton's law for both gravitational and electromagnetic forces and a Lennard-Jones potential
    
       # Gravitational force
-
       a_grav = - np.array([0,self._gravity_constant])
+      a_lejo = np.zeros((len(self._water), 2))
 
       for n, water in enumerate(self._water):
 
@@ -178,29 +177,38 @@ class System:
 
          a_elec = self._coulomb_constant * self._water_charge * self._charge.charge / (r2 * self._water_mass) * r
 
-         water.update(self._time_step, a_grav + a_elec)
-      
+         # Cohesive force
+         # Lennard-Jones potential is defined as U(r)=4e((s/r)^12-(s/r)^6)
+         # Resulting force is radial of norm F = -dU/dr = 4e((12s/r)^13-(6s/r)^7)
+         # s is the distance such that U(s)=0 and e the well depth U(r_min)
+
+         for nn, water_bis in enumerate(self._water[n+1:]):
+
+            r = water.get_position() - water_bis.get_position()
+            norm_r = np.sqrt(np.sum(np.square(r)))
+
+            if norm_r <= 3 * self._sigma_LJ and norm_r > 0:
+               r = r/norm_r
+               a = 4 * self._epsilon_LJ / self._water_mass * ((12 * pow(self._sigma_LJ,12))/pow(r,13) - (6 * pow(self._sigma_LJ,6))/pow(r,7)) * r
+               
+               #3rd Newton's law of reciprocal forces
+               a_lejo[n] += a
+               a_lejo[n+nn+1] -= a
+
+            
+         water.update(self._time_step, a_grav + a_elec + a_lejo[n])
+         
+
+      #if new water should spawn (previous water gone), a line of water is added
       #sum of squares of water coordinates of last spawned batch compared to initial coordinates
       ss = 0
       for nn, water in enumerate(self._water[-self._number_drops:]):
          ss += np.sum(np.square(water.get_position()-self._water_spawn_position[nn]))
 
-      if ss/self._number_drops >= np.square(self._drop_diameter): 
-         self.new_water()      #if new water should spawn (previous water gone), a line of water is added
+      if ss/self._number_drops >= np.square(self._drop_diameter) and self._time[frame] <= self._generation_time: 
+         self.new_water()      
       
       return self.update_plot()
-
-      '''# Lennard-Jones potential is defined as U(r)=4e((s/r)^12-(s/r)^6)
-      # Resulting force is radial of norm F = -dU/dr = 4e((12s/r)^13-(6s/r)^7)
-      # s is the distance such that U(s)=0 and e the well depth U(r_min)
-
-      for i in range(len(self.__Water)):
-
-         a_lejo = 4 * self.__epsilon / self.__water.mass ((12 * pow(self.__sigma,12))/pow(r,13) - (6 * pow(self.__sigma,6))/pow(r,7)) * r
-         
-         # Using that a = dv/dt to find an expression for the change in velocity
-         a = a_elec + a_grav + a_lejo 
-         self.__water.update(dt, dv)'''
 
    def animate(self, save = 0, name = ''):
 
