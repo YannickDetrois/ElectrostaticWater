@@ -108,10 +108,10 @@ class System:
       '''
       Allows to initialise the plot, setting title, dimensions, ...
       '''
-      xlimleft = -2.5
-      xlimright = 7.5
-      ylimlow = -40
-      ylimhigh = 20
+      xlimleft = -0.01
+      xlimright = 0.1
+      ylimlow = -0.5
+      ylimhigh = 0.2
       self._deltaxlim = xlimright - xlimleft
 
       width = 6
@@ -124,8 +124,8 @@ class System:
       self._figure = figure(figsize=(width, height), dpi=self._dots_per_inch)
       axis = plt.axes(xlim=(xlimleft,xlimright),  ylim=(ylimlow,ylimhigh))
       axis.set_title("Trajectoire du filet d'eau")
-      axis.set_xlabel(r'x [cm]')
-      axis.set_ylabel(r'y [cm]')
+      axis.set_xlabel(r'x [m]')
+      axis.set_ylabel(r'y [m]')
       
       # initializing a line variable
       self._line_water, self._line_charge, = axis.plot([], [], [], [], lw=0)
