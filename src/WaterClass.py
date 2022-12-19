@@ -20,16 +20,8 @@ class Water:
         self.__x = [position[0]]
         self.__y = [position[1]]
         self.__velocity, self.charge, self.mass = np.array(velocity, dtype=float), charge, mass
-        self.__speed = [self.get_speed()]
-
-    def plotspeed(self):
-        '''
-        Allows to plot the speed of the drop as a function of time by plotting the log of all computed speeds.
-        '''
-        plt.title("Vitesse de la goutte d'eau en fonction du temps")
-        plt.xlabel("Temps")
-        plt.ylabel("Vitesse")
-        plt.show()
+        self.speed = [self.get_speed()]
+        self.acceleration = []
 
     def update(self, dt, a):
         '''
@@ -47,7 +39,7 @@ class Water:
         self.__velocity += dv
         self.__x.append(self.__x[-1] + self.__velocity[0]*dt)
         self.__y.append(self.__y[-1] + self.__velocity[1]*dt)
-        self.__speed.append(self.get_speed())
+        self.speed.append(self.get_speed())
 
     def get_speed(self):
         '''
@@ -61,3 +53,7 @@ class Water:
         '''
 
         return np.array([self.__x[-1], self.__y[-1]])
+
+    def add_acceleration(self, a_grav, a_elec, a_lejo, a_tot):
+
+        self.acceleration.append(np.array([a_grav, a_elec, a_lejo, a_tot]))
