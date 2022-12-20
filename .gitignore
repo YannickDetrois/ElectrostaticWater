@@ -3,5 +3,4 @@ __pycache__/
 *.vs/
 *.ipynb_checkpoints/
 *.DS_Store
-*.gif
-*.png
+
