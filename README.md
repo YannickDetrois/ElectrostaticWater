@@ -1,6 +1,6 @@
 # Electrostatic Water
 
-This project's aim is to simulate the trajectory of a water droplet in a gravitational field and exposed to a charge. The water droplet (class Water) is given an initial velocity and position, as well as a mass and charge. The charge (class Charge) has a fixed position and a charge. Both the charge and the droplet are considered to be points. Given a system (class System) with a specific gravitational constant and Coulomb constant, the position and velocity of the water droplet can be updated and plotted as a function of time. 
+This project's aim is to simulate the trajectory of a water stream in a gravitational field and exposed to a charge. The stream is composed of water droplets (class Water) and is given a a radius, initial velocity and position, as well as a mass, charge and interaction potential parameters. The interaction between drops follows an attractive-repulsive potential similar to a Lennard-Jones potential. The charge (class Charge) has a fixed position and a charge. Both the charge and the droplet are considered to be points. Given a system (class System) with a specific gravitational constant and Coulomb constant, the position and velocity of the water droplet can be updated and plotted as a function of time. 
 
 # Requirements
 
@@ -14,7 +14,38 @@ To see and test the experiment simulation, simply run file main.py on any IDE or
 
 ```python3 main.py```
 
-main.py contains a generic use of the classes, in which parameters can be manually changed to test different setups. For instance, a water drop with initial position (2,100), initial velocity (0.,0.), charge -10 and mass 1, a charge with position (0,0) and charge -50 and a system with gravitational constant 0.5 and Coulomb constant 1 gives:
+main.py contains a generic use of the classes, in which parameters can be manually changed to test different setups. For instance, a system with the following initial parameters
 
-![velocity](/images/traj1.png)
-![trajectory](/images/spee1.png)
+    ####################################
+    #### DEFINING SYSTEM PARAMETERS ####
+    ####################################
+
+    gravity_constant = 9.81                #gravity constant on Earth's surface         [m/s^2]
+    coulomb_constant = 8.988*pow(10,9)     #Coulomb constant                            [N⋅m^2⋅C^−2]
+    miniumum_potential = 2*pow(10,-8)      #Lennard-Jones well depth U(r_min)           [J]
+    minimum_radius = 0.001                 #Lennard-Jones minimum potential  is 2r_min  [m]
+    simulation_time = 1                    #simulation time                             [s]
+    time_step = 0.01                       #time step                                   [s]
+    generation_time = 1                    #time in which new water spawns              [s]
+
+    ######### WATER PARAMETERS #########
+
+    target_drop = 0                        #drop in the first row targetted for tracking
+    water_velocity = np.array([0,-0.5])    #initial velocity of all water drops         [m/s]
+    water_position = np.array([0.05,0.2])  #mean initial position of all water drops    [m]
+    stream_radius = 0.01                   #radius of the water stream                  [m]
+    charge_density = 5 * pow(10,-9)        #charge density of the water                 [C/m^2]
+    mass_density = 1                       #mass density of water                       [kg/m^2]
+
+    ######## CHARGE PARAMETERS #########
+
+    charge_position = [0,0]                #position of the charge                      [m]
+    charge = -0.0001                       #value of the charge                         [C]
+
+results in these outcomes for the trajectory animation:  
+
+![velocity](/animations/animation.gif)
+
+The velocity and acceleration curves of the water drop with index 0 are:
+
+![trajectory](/figures/figure.png)
